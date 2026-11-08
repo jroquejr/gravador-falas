@@ -1,0 +1,65 @@
+:root {
+  --azul: #1f5f8b; --azul-claro: #eaf2f9; --verde: #1e7d45; --verde-claro: #e6f4ea;
+  --vermelho: #c0392b; --vermelho-claro: #fdecea; --cinza: #5f6672; --borda: #dde2e8;
+  --fundo: #f4f6f8; --texto: #1d232b;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--fundo); color: var(--texto);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+#topo {
+  position: sticky; top: 0; z-index: 5; background: var(--azul); color: #fff;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px; box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.topo-linha { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+#nome { font-size: 20px; margin: 0; }
+#contagem { font-size: 15px; white-space: nowrap; font-weight: 600; }
+.barra { height: 6px; background: rgba(255,255,255,.3); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+#barra-progresso { height: 100%; width: 0; background: #7ee2a2; transition: width .3s; }
+main { max-width: 680px; margin: 0 auto; padding: 12px; }
+.cartao { background: #fff; border: 1px solid var(--borda); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+.estado { text-align: center; color: var(--cinza); }
+.estado.erro { color: var(--vermelho); background: var(--vermelho-claro); border-color: #f3c4bd; }
+.aviso { background: #fff7e0; border: 1px solid #f0d58a; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; }
+.como h2 { font-size: 17px; margin: 0 0 6px; }
+.como ol { margin: 0; padding-left: 20px; }
+.como li { margin: 4px 0; }
+.miudo { font-size: 13.5px; color: var(--cinza); }
+.centro { text-align: center; }
+.cena { margin: 20px 0 8px; }
+.cena h2 { font-size: 18px; margin: 0 0 6px; color: var(--azul); }
+.cena-intencao { background: var(--azul-claro); border-radius: 12px; padding: 10px 14px; font-size: 14.5px; margin: 0; }
+.fala { background: #fff; border: 1px solid var(--borda); border-radius: 14px; padding: 14px 16px; margin: 10px 0; }
+.fala.enviada { border-color: #a9d8b8; }
+.fala-topo { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.codigo { font: 600 13px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--cinza); word-break: break-all; }
+.selo { font-size: 13px; font-weight: 600; border-radius: 999px; padding: 2px 10px; white-space: nowrap; background: #eef0f3; color: var(--cinza); }
+.selo.ok { background: var(--verde-claro); color: var(--verde); }
+.nota { margin: 6px 0 0; font-size: 13.5px; font-style: italic; color: #8a5a00; }
+.antes, .intencao { margin: 6px 0 0; font-size: 14px; color: var(--cinza); }
+.antes b, .intencao b { color: #3d4450; }
+.texto { font-size: 21px; line-height: 1.5; margin: 12px 0; font-family: Georgia, "Times New Roman", serif; }
+.gravando { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; }
+.gravando[hidden], .player[hidden], [hidden] { display: none !important; }
+.ponto { width: 12px; height: 12px; border-radius: 50%; background: var(--vermelho); animation: pisca 1s infinite; }
+@keyframes pisca { 50% { opacity: .25; } }
+.tempo { font: 600 18px ui-monospace, Menlo, monospace; min-width: 48px; }
+.nivel { flex: 1; height: 12px; background: #eceff2; border-radius: 6px; overflow: hidden; }
+.nivel-barra { height: 100%; width: 0; background: linear-gradient(90deg, #47b36b, #e8b23a 75%, #d9534f); transition: width .06s linear; }
+.player { width: 100%; margin: 4px 0 8px; }
+.botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+button {
+  font: inherit; font-size: 17px; font-weight: 600; min-height: 48px; padding: 10px 16px; border-radius: 12px;
+  border: 1px solid var(--borda); background: #fff; color: var(--texto); flex: 1 1 auto; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+button.primario { background: var(--azul); color: #fff; border-color: var(--azul); }
+button.parar { background: var(--vermelho); border-color: var(--vermelho); color: #fff; }
+button:disabled { opacity: .45; cursor: default; }
+.msg { margin: 8px 0 0; font-size: 14.5px; min-height: 0; }
+.msg:empty { display: none; }
+.msg.ok { color: var(--verde); font-weight: 600; }
+.msg.erro { color: var(--vermelho); font-weight: 600; }

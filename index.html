@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f5f8b">
+<title>Gravar falas</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="topo">
+  <div class="topo-linha">
+    <h1 id="nome">Gravar falas</h1>
+    <span id="contagem" aria-live="polite"></span>
+  </div>
+  <div class="barra" aria-hidden="true"><div id="barra-progresso"></div></div>
+</header>
+
+<main id="app">
+  <div id="aviso-app" class="aviso" hidden>
+    Este navegador (dentro do WhatsApp/Instagram) pode bloquear o microfone.
+    Se não funcionar, toque em <b>⋯</b> e escolha <b>Abrir no Safari/Chrome</b>.
+  </div>
+  <div id="estado" class="cartao estado">Carregando suas falas…</div>
+
+  <section id="como" class="cartao como" hidden>
+    <h2>Como gravar</h2>
+    <ol>
+      <li>Fique num lugar silencioso, com o celular <b>parado</b>, a um palmo da boca.</li>
+      <li>Toque em <b>Gravar</b>, espere <b>1 segundo</b> em silêncio, leia o texto, espere mais <b>1 segundo</b> e toque em <b>Parar</b>.</li>
+      <li>Toque em <b>Ouvir</b>. Se ficou bom, toque em <b>Enviar</b>. Se não, <b>Regravar</b>.</li>
+    </ol>
+    <p class="miudo">Leia o texto exatamente como está. Não fale o código nem o seu nome. Mantenha a tela ligada e esta página aberta enquanto envia. Pode regravar uma fala já enviada: vale a última.</p>
+  </section>
+
+  <div id="cenas"></div>
+  <p id="fim" class="miudo centro" hidden>Terminou? Não precisa fazer mais nada: os áudios já chegaram para a equipe. Obrigado!</p>
+</main>
+
+<template id="tpl-fala">
+  <article class="fala">
+    <div class="fala-topo">
+      <code class="codigo"></code>
+      <span class="selo"></span>
+    </div>
+    <p class="nota"></p>
+    <p class="antes"></p>
+    <p class="intencao"></p>
+    <p class="texto"></p>
+    <div class="gravando" hidden>
+      <span class="ponto" aria-hidden="true"></span>
+      <span class="tempo">0:00</span>
+      <div class="nivel" aria-hidden="true"><div class="nivel-barra"></div></div>
+    </div>
+    <audio class="player" preload="metadata" hidden></audio>
+    <div class="botoes">
+      <button type="button" class="b-gravar primario">● Gravar</button>
+      <button type="button" class="b-ouvir" hidden>▶ Ouvir</button>
+      <button type="button" class="b-regravar" hidden>↺ Regravar</button>
+      <button type="button" class="b-enviar primario" hidden>Enviar ↑</button>
+    </div>
+    <p class="msg" aria-live="polite"></p>
+  </article>
+</template>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
