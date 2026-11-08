@@ -102,8 +102,7 @@
   function load() {
     showState('Carregando suas falas…');
     var params = { p: SLUG, t: TOKEN };
-    fetch(API + '?' + new URLSearchParams(params).toString(), { credentials: 'omit', referrerPolicy: 'no-referrer' })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    api({ action: 'get', p: SLUG, t: TOKEN }, 40000)
       .catch(function () { return jsonp(params); })
       .then(function (res) {
         if (!res || !res.ok) {
@@ -116,6 +115,14 @@
   }
 
   // ------------------------------------------------------------------ tela
+  function updatePending() {
+    var n = items.filter(function (it) { return it.pending; }).length;
+    state.pending = n;
+    var bar = $('#pendente');
+    bar.hidden = !n;
+    bar.textContent = n === 1 ? '1 fala gravada ainda não foi enviada — toque em Enviar ↑' : n + ' falas gravadas ainda não foram enviadas — toque em Enviar ↑';
+  }
+
   function updateProgress() {
     var n = Object.keys(state.sent).length;
     $('#contagem').textContent = n + ' de ' + state.total + ' enviados';
@@ -183,7 +190,7 @@
     ui.gravar.onclick = function () { state.busy === item ? stopRec(item) : startRec(item); };
     ui.regravar.onclick = function () { startRec(item); };
     ui.ouvir.onclick = function () {
-      if (ui.player.paused) { ui.player.play().catch(function () {}); } else { ui.player.pause(); }
+      if (ui.player.paused) { pauseAll(); ui.player.play().catch(function () {}); } else { ui.player.pause(); }
     };
     ui.player.onplay = function () { ui.ouvir.textContent = '❚❚ Pausar'; };
     ui.player.onpause = ui.player.onended = function () { ui.ouvir.textContent = '▶ Ouvir'; };
@@ -213,20 +220,24 @@
     ui.msg.className = 'msg' + (cls ? ' ' + cls : '');
     item.mode = mode;
     refreshLocks();
+    updatePending();
   }
 
   // Só uma gravação por vez; não regravar enquanto envia.
   function refreshLocks() {
     items.forEach(function (it) {
       var other = !!state.busy && state.busy !== it;
-      it.ui.gravar.disabled = other;
-      it.ui.regravar.disabled = other || it.mode === 'sending';
-      it.ui.enviar.disabled = it.mode === 'sending';
+      var starting = state.busy === it && it.mode !== 'rec'; // esperando o microfone
+      it.ui.gravar.disabled = other || starting;
+      it.ui.regravar.disabled = other || starting || it.mode === 'sending';
+      it.ui.enviar.disabled = starting || it.mode === 'sending';
     });
   }
 
   // ------------------------------------------------------------------ gravação
   var audioCtx = null;
+
+  function pauseAll() { items.forEach(function (it) { if (!it.ui.player.paused) it.ui.player.pause(); }); }
 
   function startRec(item) {
     if (state.busy) return;
@@ -235,15 +246,22 @@
       paint(item, item.blob ? 'ready' : 'idle', 'Este navegador não grava áudio. Abra o link no Chrome ou no Safari.', 'erro');
       return;
     }
-    state.busy = item; // trava outros botões enquanto pede o microfone
-    paint(item, 'idle', 'Pedindo acesso ao microfone…');
+    pauseAll();
+    state.busy = item; // trava os botões enquanto pede o microfone
+    paint(item, item.blob ? 'ready' : 'idle', 'Pedindo acesso ao microfone…');
     try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
     } catch (e) { audioCtx = null; }
-    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } })
+    var md = navigator.mediaDevices;
+    md.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+      .catch(function (err) {
+        if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) throw err;
+        return md.getUserMedia({ audio: true }); // reserva para aparelhos que recusam as restrições
+      })
       .then(function (stream) { beginRecording(item, stream, mime); })
       .catch(function (err) {
+        closeCtx();
         state.busy = null;
         var m = err && err.name === 'NotAllowedError'
           ? 'O microfone foi bloqueado. Permita o microfone para este site (ícone ao lado do endereço) e tente de novo. Se abriu pelo WhatsApp/Instagram, abra no Safari ou Chrome.'
@@ -259,6 +277,7 @@
     } catch (e) {
       try { rec = new MediaRecorder(stream); } catch (e2) {
         stream.getTracks().forEach(function (t) { t.stop(); });
+        closeCtx();
         state.busy = null;
         paint(item, 'idle', 'Este navegador não consegue gravar áudio.', 'erro');
         return;
@@ -295,8 +314,9 @@
       cancelAnimationFrame(raf);
       try { if (src) src.disconnect(); } catch (e) {}
       stream.getTracks().forEach(function (t) { t.stop(); });
+      closeCtx();
       state.busy = null;
-      var type = (rec.mimeType || mime || (chunks[0] && chunks[0].type) || 'audio/webm');
+      var type = rec.mimeType || (chunks[0] && chunks[0].type) || mime || (/iPhone|iPad|Macintosh/.test(ua) ? 'audio/mp4' : 'audio/webm');
       var blob = new Blob(chunks, { type: type });
       item.dur = (Date.now() - t0) / 1000;
       if (!blob.size) { paint(item, 'idle', 'A gravação ficou vazia. Tente de novo.', 'erro'); wakeOff(); return; }
@@ -304,19 +324,22 @@
       item.blob = blob;
       item.url = URL.createObjectURL(blob);
       ui.player.src = item.url;
-      state.pending++;
       item.pending = true;
       paint(item, 'ready', 'Gravado (' + fmtTime(item.dur) + '). Ouça e, se estiver bom, toque em Enviar.');
       wakeOff();
     };
     item.rec = rec;
-    if (item.pending) { state.pending--; item.pending = false; }
+    item.pending = false;
     if (item.url) { ui.player.pause(); }
     item.blob = null;
     rec.start(1000);
     wakeOn();
     paint(item, 'rec');
     tick();
+  }
+
+  function closeCtx() {
+    if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
   }
 
   function stopRec(item) {
@@ -346,13 +369,15 @@
       if (!res || !res.ok) { paint(item, 'err', (res && res.error) || 'Não foi possível enviar.', 'erro'); return; }
       var prev = state.sent[item.code];
       state.sent[item.code] = { n: (prev ? prev.n : 0) + 1, at: res.at, size: res.size };
-      if (item.pending) { state.pending--; item.pending = false; }
+      item.pending = false;
       paint(item, 'sent', 'Enviado ✓ ' + fmtDay(res.at) + '.', 'ok');
       updateProgress();
       wakeOff();
-    }).catch(function () {
+    }).catch(function (err) {
       state.uploading--;
-      paint(item, 'err', 'Falha na conexão. Verifique a internet e toque em “Tentar de novo”.', 'erro');
+      paint(item, 'err', err && err.name === 'AbortError'
+        ? 'O envio demorou demais. Se puder, use o Wi-Fi e toque em “Tentar de novo”.'
+        : 'Falha na conexão. Verifique a internet e toque em “Tentar de novo”.', 'erro');
       wakeOff();
     });
   }

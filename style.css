@@ -63,3 +63,4 @@ button:disabled { opacity: .45; cursor: default; }
 .msg:empty { display: none; }
 .msg.ok { color: var(--verde); font-weight: 600; }
 .msg.erro { color: var(--vermelho); font-weight: 600; }
+#pendente { margin-top: 8px; background: #fff3cd; color: #6b4e00; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 600; }
