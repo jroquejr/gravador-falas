@@ -170,7 +170,8 @@
     var ui = {
       root: node, selo: $('.selo', node), msg: $('.msg', node), rec: $('.gravando', node), tempo: $('.tempo', node),
       nivel: $('.nivel-barra', node), player: $('.player', node), gravar: $('.b-gravar', node), ouvir: $('.b-ouvir', node),
-      regravar: $('.b-regravar', node), enviar: $('.b-enviar', node)
+      regravar: $('.b-regravar', node), enviar: $('.b-enviar', node),
+      arquivo: $('.b-arquivo', node), input: $('.arquivo', node)
     };
     node.dataset.code = f.code;
     $('.codigo', node).textContent = f.code;
@@ -195,6 +196,8 @@
     ui.player.onplay = function () { ui.ouvir.textContent = '❚❚ Pausar'; };
     ui.player.onpause = ui.player.onended = function () { ui.ouvir.textContent = '▶ Ouvir'; };
     ui.enviar.onclick = function () { upload(item); };
+    ui.arquivo.onclick = function () { ui.input.value = ''; ui.input.click(); };
+    ui.input.onchange = function () { useFile(item, ui.input.files && ui.input.files[0]); };
     return node;
   }
 
@@ -212,6 +215,8 @@
     ui.ouvir.hidden = !has || mode === 'rec';
     ui.regravar.hidden = !has || mode === 'rec';
     ui.enviar.hidden = !has || mode === 'rec' || mode === 'sent';
+    ui.arquivo.hidden = mode === 'rec' || mode === 'sending';
+    ui.arquivo.textContent = has ? '📎 Trocar arquivo' : '📎 Enviar áudio do WhatsApp';
     ui.enviar.textContent = mode === 'sending' ? 'Enviando…' : (mode === 'err' ? 'Tentar de novo ↑' : 'Enviar ↑');
     if (mode === 'idle' && sent && !text) {
       text = 'Último envio ' + fmtDay(sent.at) + '.'; cls = 'ok';
@@ -231,6 +236,7 @@
       it.ui.gravar.disabled = other || starting;
       it.ui.regravar.disabled = other || starting || it.mode === 'sending';
       it.ui.enviar.disabled = starting || it.mode === 'sending';
+      it.ui.arquivo.disabled = other || starting || it.mode === 'sending';
     });
   }
 
@@ -344,6 +350,38 @@
 
   function stopRec(item) {
     if (item.rec && item.rec.state !== 'inactive') item.rec.stop();
+  }
+
+  // ------------------------------------------------------------------ arquivo (WhatsApp etc.)
+  var EXT_MIME = { opus: 'audio/ogg', ogg: 'audio/ogg', oga: 'audio/ogg', m4a: 'audio/mp4', mp4: 'audio/mp4',
+    aac: 'audio/aac', mp3: 'audio/mpeg', wav: 'audio/wav', webm: 'audio/webm' };
+  var TYPE_MIME = { 'audio/opus': 'audio/ogg', 'audio/x-opus+ogg': 'audio/ogg', 'application/ogg': 'audio/ogg',
+    'video/mp4': 'audio/mp4', 'audio/x-m4a': 'audio/mp4', 'audio/m4a': 'audio/mp4', 'audio/mp3': 'audio/mpeg',
+    'audio/x-wav': 'audio/wav', 'audio/wave': 'audio/wav', 'video/webm': 'audio/webm', 'audio/x-aac': 'audio/aac' };
+
+  function fileMime(file) {
+    var ext = (file.name.split('.').pop() || '').toLowerCase();
+    var t = (file.type || '').toLowerCase().split(';')[0].trim();
+    if (EXT_MIME[ext]) return EXT_MIME[ext];
+    if (TYPE_MIME[t]) return TYPE_MIME[t];
+    if (/^audio\/(webm|mp4|aac|mpeg|ogg|wav)$/.test(t)) return t;
+    return null;
+  }
+
+  function useFile(item, file) {
+    if (!file || state.busy) return;
+    var mime = fileMime(file);
+    if (!mime) { paint(item, item.blob ? 'ready' : 'idle', 'Esse arquivo não parece ser um áudio. Escolha o áudio salvo do WhatsApp.', 'erro'); return; }
+    if (file.size > maxBytes) { paint(item, item.blob ? 'ready' : 'idle', 'O arquivo passou de 10 MB. Envie só a fala.', 'erro'); return; }
+    if (item.url) URL.revokeObjectURL(item.url);
+    pauseAll();
+    item.blob = new Blob([file], { type: mime });
+    item.url = URL.createObjectURL(item.blob);
+    item.dur = 0;
+    item.ui.player.src = item.url;
+    item.ui.player.onloadedmetadata = function () { if (isFinite(item.ui.player.duration)) item.dur = item.ui.player.duration; };
+    item.pending = true;
+    paint(item, 'ready', 'Arquivo escolhido: ' + file.name + '. Confira se é a fala certa e toque em Enviar.');
   }
 
   // ------------------------------------------------------------------ envio

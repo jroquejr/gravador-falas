@@ -64,3 +64,7 @@ button:disabled { opacity: .45; cursor: default; }
 .msg.ok { color: var(--verde); font-weight: 600; }
 .msg.erro { color: var(--vermelho); font-weight: 600; }
 #pendente { margin-top: 8px; background: #fff3cd; color: #6b4e00; border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 600; }
+button.b-arquivo { background: transparent; }
+.whats { margin: .6rem 0; }
+.whats summary { cursor: pointer; font-weight: 600; }
+.whats ol { margin: .4rem 0 0; padding-left: 1.2rem; }

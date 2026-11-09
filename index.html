@@ -34,6 +34,14 @@
       <li>Toque em <b>Gravar</b>, espere <b>1 segundo</b> em silêncio, leia o texto, espere mais <b>1 segundo</b> e toque em <b>Parar</b>.</li>
       <li>Toque em <b>Ouvir</b>. Se ficou bom, toque em <b>Enviar</b>. Se não, <b>Regravar</b>.</li>
     </ol>
+    <details class="whats">
+      <summary>Prefere gravar no WhatsApp?</summary>
+      <ol>
+        <li>Abra a conversa com você mesma no WhatsApp (procure seu próprio nome ou “Você”) e grave a fala como um áudio normal, com 1 segundo de silêncio antes e depois.</li>
+        <li><b>iPhone:</b> toque e segure o áudio → <b>Encaminhar</b> → ícone de compartilhar (↑) → <b>Salvar em Arquivos</b>.<br><b>Android:</b> toque e segure o áudio → ícone de compartilhar → salve no aparelho (ou em Arquivos).</li>
+        <li>Volte aqui, toque em <b>📎 Enviar áudio do WhatsApp</b> na fala certa, escolha o arquivo e toque em <b>Enviar</b>.</li>
+      </ol>
+    </details>
     <p class="miudo">Leia o texto exatamente como está. Não fale o código nem o seu nome. Mantenha a tela ligada e esta página aberta enquanto envia. Pode regravar uma fala já enviada: vale a última.</p>
   </section>
 
@@ -62,6 +70,8 @@
       <button type="button" class="b-ouvir" hidden>▶ Ouvir</button>
       <button type="button" class="b-regravar" hidden>↺ Regravar</button>
       <button type="button" class="b-enviar primario" hidden>Enviar ↑</button>
+      <button type="button" class="b-arquivo">📎 Enviar áudio do WhatsApp</button>
+      <input type="file" class="arquivo" accept="audio/*,.opus,.ogg,.oga,.m4a,.mp3,.aac,.wav,.webm,.mp4" hidden>
     </div>
     <p class="msg" aria-live="polite"></p>
   </article>
